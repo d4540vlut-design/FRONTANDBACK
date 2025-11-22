@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Cuentas de Cobro</title>
+    <style>
+        /* 1.1 Diseño y Estética de la Interfaz */
+        :root {
+            /* Colores requeridos */
+            --primary-blue: #007BFF;
+            --secondary-gray: #B0C4DE;
+            --dark-blue: #004a99;
+            --light-cyan: #E0FFFF;
+            --background-color: #f4f7f9;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            /* Disminuir tamaño de fuente general */
+            font-size: 0.95em;
+        }
+
+        /* Barra de navegación superior (Sidebar) */
+        .sidebar {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--dark-blue);
+        }
+
+        /* Icono de Contacto y Notificaciones */
+        .utility-icons {
+            display: flex;
+            align-items: center;
+        }
+
+        .utility-icons button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-left: 8px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .utility-icons button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .main-content {
+            padding: 15px;
+            max-width: 1100px;
+            margin: 15px auto;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .module {
+            display: none;
+            padding: 15px 0;
+        }
+
+        .module.active {
+            display: block;
+        }
+
+        h2 {
+            color: var(--dark-blue);
+            border-bottom: 1px solid var(--secondary-gray);
+            padding-bottom: 8px;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        /* Módulo Inicio */
+        .summary-cards {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            flex: 1;
+            background-color: var(--light-cyan);
+            border: 1px solid var(--secondary-gray);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin: 5px 0 0;
+        }
+
+        .card-label {
+            font-size: 0.85em;
+            color: var(--text-color);
+        }
+
+        /* Módulo Validar Factura */
+        .file-upload-section {
+            padding: 20px;
+            border: 2px dashed var(--secondary-gray);
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 15px;
+            background-color: var(--light-cyan);
+        }
+
+        .file-upload-section p.formats {
+            font-size: 0.85em;
+            color: var(--dark-blue);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-section input[type="file"] {
+            display: none;
+        }
+
+        .upload-button {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+
+        .upload-button:hover {
+            background-color: var(--dark-blue);
+        }
+
+        .action-buttons button {
+            padding: 8px 20px;
+            font-size: 0.9em;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .validate-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .clear-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        /* Módulo Historial */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .history-table th, .history-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .history-table th {
+            background-color: var(--dark-blue);
+            color: white;
+        }
+
+        .status-validado { color: #28a745; font-weight: bold; }
+        .status-rechazado { color: #dc3545; font-weight: bold; }
+
+        /* Modal para Notificaciones */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal-content input {
+            width: 90%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav-links {
+                margin-top: 8px;
+            }
+            .nav-links a {
+                display: block;
+                margin-left: 0;
+                margin-top: 4px;
+            }
+            .summary-cards {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="sidebar">
+        <h1>VALIDADOR DE CUENTAS DE COBRO</h1>
+        <nav class="nav-links">
+            <a href="#" class="nav-link active" data-module="home-module">🏠 Inicio</a>
+            <a href="#" class="nav-link" data-module="validator-module">📄 Validar Factura</a>
+            <a href="#" class="nav-link" data-module="history-module">📜 Historial</a>
+            <a href="#" class="nav-link" data-module="help-module">❓ Ayuda y Requisitos</a>
+        </nav>
+        <div class="utility-icons">
+            <button onclick="contactSupport()" title="Contacto Soporte (L-V, 8AM - 5PM)">📞</button>
+            <button onclick="showNotificationSetup()" title="Configurar Notificaciones">🔔</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section id="home-module" class="module active">
+            <h2>🏠 Resumen de Actividad Reciente</h2>
+            <div class="summary-cards">
+                <div class="card">
+                    <p class="card-label">Total de Facturas Validadas</p>
+                    <p class="card-value" id="total-validated">0</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Porcentaje de Cumplimiento (%)</p>
+                    <p class="card-value" id="compliance-percentage">0%</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Cuentas No Cumplen (Rechazos)</p>
+                    <p class="card-value" id="total-rejected">0</p>
+                </div>
+            </div>
+            <p>Este sistema simula la validación de cuentas de cobro. Use el módulo "Validar Factura" para cargar un archivo.</p>
+        </section>
+
+        <section id="validator-module" class="module">
+            <h2>📄 Validar Cuenta de Cobro</h2>
+            <div class="file-upload-section">
+                <p class="formats">Formatos aceptados: Imagen PDF, Imagen PNG, Imagen JPG (JPEG)</p>
+                <input type="file" id="file-input" accept=".pdf, .png, .jpg, .jpeg" onchange="updateFileName()">
+                <button class="upload-button" onclick="document.getElementById('file-input').click()">Cargar Archivo</button>
+                <p id="file-status">No se ha elegido ningún archivo</p>
+            </div>
+            <div class="action-buttons">
+                <button class="validate-btn" onclick="validateInvoice()">Validar</button>
+                <button class="clear-btn" onclick="clearInterface()">Limpiar</button>
+            </div>
+            <div id="validation-result" style="margin-top: 20px; padding: 8px; border-left: 5px solid var(--primary-blue); font-weight: bold;"></div>
+        </section>
+
+        <section id="history-module" class="module">
+            <h2>📜 Historial de Cuentas Procesadas</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora de Radicado</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    </tbody>
+            </table>
+        </section>
+
+        <section id="help-module" class="module">
+            <h2>❓ Requisitos Obligatorios del RECIBO DE CAJA MENOR</h2>
+            <p>"Para poder radicar la cuenta de cobro, usted debe realizarla mediante la **factura original emitida por el Jefe Inmediato**."</p>
+            <h3>Datos Requeridos:</h3>
+            <ul class="requirements-list">
+                <li>**Fecha:** Debe estar en el siguiente formato: Día/Mes/Año (Ejemplo: 17/05/2025).</li>
+                <li>**Pagado a:** Nombre y Apellidos completos.</li>
+                <li>**Por concepto de:** Debe indicar uno de los 3 tipos:
+                    <ul style="margin-top: 5px; list-style: circle; padding-left: 20px;">
+                        <li>Días Menos de Una Semana.</li>
+                        <li>Semana Completa.</li>
+                        <li>Mes Completo.</li>
+                    </ul>
+                </li>
+                <li>**Valor:** Descripción del valor total en letras.</li>
+                <li>**Aprobado:** Indicación de Sí o No.</li>
+                <li>**Firmado:** Debe contener la firma requerida.</li>
+            </ul>
+            <p style="font-style: italic;">**Nota:** (para realizar la cuenta de cobro usted debe cumplir con las indicaciones establecidas).</p>
+        </section>
+
+        <div id="notification-modal" class="modal">
+            <div class="modal-content">
+                <h3>Configurar Notificaciones 🔔</h3>
+                <p>Ingrese su **WhatsApp o Gmail** para recibir el estado final de la radicación.</p>
+                <input type="text" placeholder="Ej: +57 300... o correo@gmail.com">
+                <button onclick="saveNotificationInfo()" class="upload-button">Guardar</button>
+                <button onclick="document.getElementById('notification-modal').style.display='none'" class="clear-btn">Cerrar</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Lógica de BACK-END y FRONT-END (Simulada)
+
+        // Variables de estado (Simulación de base de datos)
+        let totalValidated = 10;
+        let totalRejected = 3;
+        let historyData = [];
+
+        // Función de inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHomeSummary();
+            // Datos de ejemplo para el historial
+            historyData.push({ date: '15/11/2025 10:30 AM', status: 'Validado con Éxito', class: 'status-validado' });
+            historyData.push({ date: '14/11/2025 03:45 PM', status: 'Rechazado (Falta Fecha)', class: 'status-rechazado' });
+            renderHistory();
+        });
+
+        // #######################################################
+        // Lógica de Navegación y Módulos
+        // #######################################################
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetModuleId = this.getAttribute('data-module');
+
+                document.querySelectorAll('.module').forEach(module => {
+                    module.classList.remove('active');
+                });
+                document.querySelectorAll('.nav-link').forEach(l => {
+                    l.classList.remove('active');
+                });
+
+                document.getElementById(targetModuleId).classList.add('active');
+                this.classList.add('active');
+            });
+        });
+
+        // #######################################################
+        // Módulo Inicio (Home)
+        // #######################################################
+        function updateHomeSummary() {
+            const totalProcessed = totalValidated + totalRejected;
+            document.getElementById('total-validated').textContent = totalValidated;
+            document.getElementById('total-rejected').textContent = totalRejected;
+            let compliance = totalProcessed > 0 ? ((totalValidated / totalProcessed) * 100).toFixed(1) : 0;
+            document.getElementById('compliance-percentage').textContent = `${compliance}%`;
+        }
+
+        // #######################################################
+        // Módulo Validar Factura
+        // #######################################################
+        function updateFileName() {
+            const fileInput = document.getElementById('file-input');
+            const fileStatus = document.getElementById('file-status');
+            if (fileInput.files.length > 0) {
+                fileStatus.textContent = `Archivo elegido: ${fileInput.files[0].name}`;
+            } else {
+                fileStatus.textContent = "No se ha elegido ningún archivo";
+            }
+            document.getElementById('validation-result').textContent = "";
+        }
+
+        function clearInterface() {
+            document.getElementById('file-input').value = '';
+            document.getElementById('file-status').textContent = "No se ha elegido ningún archivo";
+            document.getElementById('validation-result').textContent = "";
+        }
+
+        function validateInvoice() {
+            const fileInput = document.getElementById('file-input');
+            const resultDiv = document.getElementById('validation-result');
+            
+            if (fileInput.files.length === 0) {
+                resultDiv.innerHTML = "<span style='color: #dc3545;'>❗ Error: Por favor, cargue un archivo antes de validar.</span>";
+                return;
+            }
+
+            resultDiv.innerHTML = `<span style='color: var(--primary-blue);'>⏳ Procesando con IA/OCR (Simulación)...</span>`;
+            const fileName = fileInput.files[0].name;
+
+            // SIMULACIÓN DE IA/OCR (Objetivo 3)
+            setTimeout(() => {
+                const now = new Date();
+                const dateRadicado = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+                let status, statusClass;
+                
+                // Simulación: Archivos con 'error' o 'rechazo' en el nombre son reprobados.
+                if (fileName.toLowerCase().includes('error') || fileName.toLowerCase().includes('rechazo') || Math.random() < 0.3) {
+                    status = "Rechazado (Simulación: Falla de Requisito OCR/IA)";
+                    statusClass = "status-rechazado";
+                    totalRejected++;
+                } else {
+                    status = "Validado con Éxito (Cumple Requisitos OCR/IA)";
+                    statusClass = "status-validado";
+                    totalValidated++;
+                }
+
+                // Actualizar Módulo Inicio y Historial
+                updateHomeSummary();
+                historyData.unshift({ date: dateRadicado, status: status, class: statusClass });
+                renderHistory();
+
+                resultDiv.innerHTML = `<span class="${statusClass}">✅ Validación Finalizada. Estado: ${status}</span>`;
+                alert(`Notificación enviada: El estado de su radicación es ${status}.`);
+            }, 3000); // Simula 3 segundos de procesamiento
+
+        }
+
+        // #######################################################
+        // Módulo Historial
+        // #######################################################
+        function renderHistory() {
+            const historyBody = document.getElementById('history-body');
+            historyBody.innerHTML = '';
+            // Renderiza en orden inverso (más nuevo primero)
+            historyData.forEach(item => {
+                const newRow = historyBody.insertRow(-1);
+                newRow.innerHTML = `
+                    <td>${item.date}</td>
+                    <td class="${item.class}">${item.status}</td>
+                `;
+            });
+        }
+
+        // #######################################################
+        // Contacto y Notificaciones
+        // #######################################################
+        function contactSupport() {
+            // Botón de WhatsApp: Lunes a Viernes, de 8:00 A.M. a 5:00 P.M.
+            const message = "Hola, necesito soporte con el Validador de Cuentas de Cobro. Mi horario de consulta es Lunes a Viernes, de 8:00 A.M. a 5:00 P.M.";
+            const whatsappLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappLink, '_blank');
+        }
+
+        function showNotificationSetup() {
+            // Sistema de Notificación
+            document.getElementById('notification-modal').style.display = 'block';
+        }
+
+        function saveNotificationInfo() {
+            const input = document.querySelector('#notification-modal input[type="text"]');
+            const contact = input.value;
+            if (contact && (contact.includes('@') || contact.includes('+') || contact.match(/[0-9]/))) {
+                alert(`Guardado: Se enviarán notificaciones sobre el estado final de la radicación al contacto: ${contact}.`);
+                document.getElementById('notification-modal').style.display = 'none';
+                input.value = ''; // Limpiar el campo después de guardar
+            } else {
+                alert("Por favor, ingrese un WhatsApp o Gmail válido.");
+            }
+        }
+    </script>
+</body>
+</html>
